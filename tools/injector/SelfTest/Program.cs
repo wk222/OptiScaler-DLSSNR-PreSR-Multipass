@@ -7,6 +7,9 @@ const string Ini = """
 Dx11Upscaler=auto
 Dx12Upscaler=auto
 
+[Menu]
+OverlayMenu=auto
+
 [Log]
 LogToFile=auto
 LogLevel=auto
@@ -66,6 +69,7 @@ try
     var ini = File.ReadAllText(Path.Combine(game, "OptiScaler.ini"));
     Check(ini.Contains("Enabled=true") && ini.Contains("Passes=2") && ini.Contains("WorkingScale=0.5"), "DlssNr 项已写入");
     Check(ini.Contains("Dx12Upscaler=dlss") && ini.Contains("Dx11Upscaler=auto") && ini.Contains("LogToFile=true"), "Upscalers/Log 项已写入");
+    Check(ini.Contains("OverlayMenu=false"), "OverlayMenu=false 已写入");
     Check(!File.ReadAllBytes(Path.Combine(game, "OptiScaler.ini")).Take(3).SequenceEqual(new byte[] { 0xEF, 0xBB, 0xBF }), "INI 无 BOM");
     Check(Scanner.ForeignOptiScaler(game).SequenceEqual(new[] { "dxgi.dll" }), "识别出 OptiScaler 代理 dll");
 

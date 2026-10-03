@@ -121,6 +121,8 @@
                                 <TextBlock Style="{StaticResource MutedText}" Margin="0,6,0,4"
                                            Text="RTX 20/30 走更重的 FP16 路径,建议 Passes=1,必要时降低 WorkingScale。"/>
                                 <CheckBox x:Name="ChkLog" Content="写入 OptiScaler.log(LogLevel=2,便于排查菜单不出现)" IsChecked="True"/>
+                                <CheckBox x:Name="ChkNoOverlay" Margin="0,4,0,0" IsChecked="True"
+                                          Content="关闭 OptiScaler 菜单覆盖层(OverlayMenu=false,KCD2 等游戏不开会启动崩溃;失去游戏内菜单)"/>
                             </StackPanel>
                         </GroupBox>
 

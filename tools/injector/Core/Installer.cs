@@ -19,6 +19,8 @@ public sealed class InstallOptions
     public bool Dx11Dlss12 { get; set; }
     public bool LogToFile { get; set; } = true;
     public int LogLevel { get; set; } = 2;
+    /// <summary>OverlayMenu=false。KCD2 实测:菜单覆盖层(ImGui)与 Steam/NVIDIA 覆盖层叠在 Present 路径上会在启动时崩溃。</summary>
+    public bool DisableMenuOverlay { get; set; } = true;
 
     static string B(bool v) => v ? "true" : "false";
 
@@ -36,6 +38,7 @@ public sealed class InstallOptions
             [("Log", "LogToFile")] = B(LogToFile),
             [("Log", "LogLevel")] = LogLevel.ToString(),
         };
+        if (DisableMenuOverlay) e[("Menu", "OverlayMenu")] = "false";
         if (Dx12Dlss) e[("Upscalers", "Dx12Upscaler")] = "dlss";
         if (Dx11Dlss12) e[("Upscalers", "Dx11Upscaler")] = "dlss_12";
         return e;

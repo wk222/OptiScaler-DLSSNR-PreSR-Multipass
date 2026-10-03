@@ -28,6 +28,7 @@ public sealed class AppConfig
     public bool Dx12 { get; set; }
     public bool Dx11 { get; set; }
     public bool Log { get; set; } = true;
+    public bool NoOverlay { get; set; } = true;
     public int Passes { get; set; } = 1;
     public double Scale { get; set; } = 1.0;
 }
@@ -77,7 +78,7 @@ public partial class MainWindow : Window
             TxtPkg.Text = c.Pkg; TxtRt.Text = c.Rt;
             CbProxy.SelectedItem = Const.ProxyChoices.Contains(c.Proxy) ? c.Proxy : "dxgi.dll";
             ChkNr.IsChecked = c.Nr; ChkPre.IsChecked = c.Pre; ChkFin.IsChecked = c.Fin;
-            ChkDx12.IsChecked = c.Dx12; ChkDx11.IsChecked = c.Dx11; ChkLog.IsChecked = c.Log;
+            ChkDx12.IsChecked = c.Dx12; ChkDx11.IsChecked = c.Dx11; ChkLog.IsChecked = c.Log; ChkNoOverlay.IsChecked = c.NoOverlay;
             CbPasses.SelectedIndex = Math.Clamp(c.Passes, 1, 3) - 1;
             SldScale.Value = Math.Clamp(c.Scale, 0.25, 1.0);
         }
@@ -91,6 +92,7 @@ public partial class MainWindow : Window
             Pkg = TxtPkg.Text.Trim(), Rt = TxtRt.Text.Trim(), Proxy = CbProxy.SelectedItem as string ?? "dxgi.dll",
             Nr = ChkNr.IsChecked == true, Pre = ChkPre.IsChecked == true, Fin = ChkFin.IsChecked == true,
             Dx12 = ChkDx12.IsChecked == true, Dx11 = ChkDx11.IsChecked == true, Log = ChkLog.IsChecked == true,
+            NoOverlay = ChkNoOverlay.IsChecked == true,
             Passes = CbPasses.SelectedIndex + 1, Scale = Math.Round(SldScale.Value, 2),
         };
         try { File.WriteAllText(ConfigPath, JsonSerializer.Serialize(c, new JsonSerializerOptions { WriteIndented = true })); } catch { }
@@ -344,6 +346,7 @@ public partial class MainWindow : Window
             Passes = CbPasses.SelectedIndex + 1, WorkingScale = Math.Round(SldScale.Value, 2),
             FinishedPicture = ChkFin.IsChecked == true, Dx12Dlss = ChkDx12.IsChecked == true,
             Dx11Dlss12 = ChkDx11.IsChecked == true, LogToFile = ChkLog.IsChecked == true,
+            DisableMenuOverlay = ChkNoOverlay.IsChecked == true,
         };
 
         Log($"▶ 注入到 {target}");
