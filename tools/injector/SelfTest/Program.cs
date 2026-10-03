@@ -78,6 +78,19 @@ try
     var patched = Installer.PatchIni("[A]\nX=1\n[B]\nQ=1", new() { [("A", "Y")] = "2", [("C", "Z")] = "3" });
     Check(patched == "[A]\nX=1\nY=2\n[B]\nQ=1\n[C]\nZ=3", "PatchIni 追加缺失键/段");
 
+    // zip -> dll 解压(假 zip)
+    var zipPath = Path.Combine(t, "rt.zip");
+    using (var z = System.IO.Compression.ZipFile.Open(zipPath, System.IO.Compression.ZipArchiveMode.Create))
+        System.IO.Compression.ZipFileExtensions.CreateEntryFromFile(z, rt, Const.RuntimeName);
+    var resolved = RuntimeSource.Resolve(zipPath, Path.Combine(t, "cache"));
+    Check(File.Exists(resolved) && Path.GetFileName(resolved) == Const.RuntimeName, "RuntimeSource.Resolve 能从 zip 取出 dll");
+    Check(GpuInfo.RuntimeVerdict(rt, "40").Item1 == Level.Warn, "未知哈希给出警告");
+
+    // 真实的默认运行库(若本机存在):哈希应被识别为 SF-v2
+    const string real = @"D:\dev\dlssnr_runtime\nvngx_dlssnr.dll";
+    if (File.Exists(real))
+        Check(GpuInfo.RuntimeVerdict(real, "40").Item1 == Level.Ok, "SF-v2 运行库在 RTX 40 上被识别为可用");
+
     var (name, drv) = GpuInfo.Detect();
     Console.WriteLine($"GPU: {name} {drv} gen={GpuInfo.Generation(name)}");
     Console.WriteLine("games: " + string.Join(" | ", Scanner.ScanAll().Take(8).Select(g => g.Name)));

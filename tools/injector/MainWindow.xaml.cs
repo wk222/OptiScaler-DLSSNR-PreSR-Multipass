@@ -58,6 +58,11 @@ public partial class MainWindow : Window
             var auto = Installer.AutodetectPackage();
             if (auto != null) { TxtPkg.Text = auto; Log($"自动找到发布包: {auto}", "ok"); }
         }
+        if (TxtRt.Text.Trim() == "" || !File.Exists(TxtRt.Text.Trim()) && !TxtRt.Text.EndsWith(".zip"))
+        {
+            var cached = RuntimeSource.FindCachedDefault(CacheDir);   // 默认运行库 SF-v2:之前下载/解压过就直接用
+            if (cached != null) TxtRt.Text = cached;
+        }
         Loaded += async (_, _) => { CheckPackage(); CheckRuntime(); await RefreshGames(); };
         Closing += (_, _) => SaveConfig();
     }
@@ -128,8 +133,25 @@ public partial class MainWindow : Window
 
     void OnPickRuntime(object s, RoutedEventArgs e)
     {
-        var d = new OpenFileDialog { Title = "选择 nvngx_dlssnr.dll", Filter = "DLL|*.dll" };
+        var d = new OpenFileDialog { Title = "选择 nvngx_dlssnr.dll 或含它的 zip", Filter = "DLL / zip|*.dll;*.zip" };
         if (d.ShowDialog() == true) { TxtRt.Text = d.FileName; CheckRuntime(); }
+    }
+
+    async void OnDownloadRuntime(object s, RoutedEventArgs e)
+    {
+        if (busy) return;
+        busy = true; Pb.Visibility = Visibility.Visible;
+        Log($"▶ 下载默认运行库 {Const.DefaultRuntimeRepo} @ {Const.DefaultRuntimeTag}");
+        try
+        {
+            var prog = new Progress<(long Done, long Total)>(p =>
+                SetLabel(LblRt, $"下载中 {p.Done >> 20} / {p.Total >> 20} MB", "Muted"));
+            var dll = await RuntimeSource.DownloadDefaultAsync(CacheDir, prog, m => Log(m));
+            TxtRt.Text = dll;
+        }
+        catch (Exception ex) { Log($"✗ 下载失败: {ex.Message}", "bad"); }
+        finally { busy = false; Pb.Visibility = Visibility.Collapsed; }
+        CheckRuntime();
     }
 
     void OnDownload(object s, RoutedEventArgs e)
@@ -173,7 +195,16 @@ public partial class MainWindow : Window
     {
         var p = TxtRt.Text.Trim();
         SetLabel(LblRt, "校验中…", "Muted");
-        var (lvl, msg) = await Task.Run(() => GpuInfo.RuntimeVerdict(p, gpuGen));
+        var (lvl, msg) = await Task.Run(() =>
+        {
+            try
+            {
+                var dll = p == "" ? p : RuntimeSource.Resolve(p, CacheDir);   // zip 自动解压
+                if (dll != p) Dispatcher.BeginInvoke(() => TxtRt.Text = dll);
+                return GpuInfo.RuntimeVerdict(dll, gpuGen);
+            }
+            catch (Exception ex) { return (Level.Bad, ex.Message); }
+        });
         var (icon, brush) = lvl switch
         {
             Level.Ok => ("✓ ", "Ok"), Level.Warn => ("⚠ ", "Warn"), Level.Bad => ("✗ ", "Danger"), _ => ("", "Muted"),
@@ -291,6 +322,8 @@ public partial class MainWindow : Window
         if (pkgSrc == "") { MessageBox.Show(this, "请先选择发布包(目录或 zip),或点\"从 GitHub 下载…\"", "提示"); return; }
 
         var rt = TxtRt.Text.Trim();
+        try { if (rt.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) rt = RuntimeSource.Resolve(rt, CacheDir); }
+        catch (Exception ex) { MessageBox.Show(this, ex.Message, "运行库", MessageBoxButton.OK, MessageBoxImage.Error); return; }
         var (lvl, msg) = GpuInfo.RuntimeVerdict(rt, gpuGen);
         if (lvl == Level.Bad) { MessageBox.Show(this, msg, "运行库不匹配", MessageBoxButton.OK, MessageBoxImage.Error); return; }
         if (lvl is Level.None or Level.Warn &&

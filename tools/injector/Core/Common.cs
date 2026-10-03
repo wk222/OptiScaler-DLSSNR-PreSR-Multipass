@@ -12,6 +12,11 @@ public static class Const
 
     public const string HashStock = "E16BCF15E16E13F527491CDF7845B2FE6521A738D8F7C9C721866A8496E1FC8E";
     public const string HashCrossGen = "E67DEE209320CDAFE0E93E45675D7AA34323A53ACC57A72B2E40A181581C989A";
+    /// <summary>ShortFuse 310.8.SF-v2(RankFTW/rhi-repo 的 dlssnr-310.8.SF-v2),本工具的默认运行库。哈希取自用户下载的原始 zip 内的 dll。</summary>
+    public const string HashSfV2 = "6EB209E764F39872625DEBD6ABAF45E2BB6322F6F270F781F70C059AE30B3927";
+    public const string DefaultRuntimeRepo = "RankFTW/rhi-repo";
+    public const string DefaultRuntimeTag = "dlssnr-310.8.SF-v2";
+    public const string DefaultRuntimeZip = "nvngx_dlssnr_310.8.SF-v2.zip";
     public const string RuntimeName = "nvngx_dlssnr.dll";
     public const string ForwarderName = "nvngx.dll_dlssnr.dll";
     public const string ManifestName = ".optiscaler_injector.json";
@@ -76,6 +81,7 @@ public static class GpuInfo
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             return (Level.None, "未选择 nvngx_dlssnr.dll(约 165MB,需自行获取)");
         var h = Hashing.Sha256(path);
+        if (h == Const.HashSfV2) return (Level.Ok, "ShortFuse 310.8.SF-v2(默认运行库,来自 RankFTW/rhi-repo)");
         if (h == Const.HashCrossGen) return (Level.Ok, "ShortFuse 跨代 310.8 运行库(RTX 20/30/40/50 通用)");
         if (h == Const.HashStock)
         {

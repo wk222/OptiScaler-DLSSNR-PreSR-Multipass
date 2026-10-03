@@ -40,7 +40,10 @@
 
                 <TextBlock Grid.Row="2" Text="NR 运行库" Style="{StaticResource H}" VerticalAlignment="Center"/>
                 <TextBox x:Name="TxtRt" Grid.Row="2" Grid.Column="1" LostFocus="RuntimeChanged"/>
-                <Button Grid.Row="2" Grid.Column="2" Content="选择 nvngx_dlssnr.dll…" Click="OnPickRuntime" Margin="8,0,0,0"/>
+                <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                    <Button Content="下载默认 SF-v2" Click="OnDownloadRuntime" Style="{StaticResource Primary}" Padding="12,5"/>
+                    <Button Content="选择 dll / zip…" Click="OnPickRuntime" Margin="6,0,0,0"/>
+                </StackPanel>
                 <TextBlock x:Name="LblRt" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,3,0,0" Style="{StaticResource MutedText}"/>
             </Grid>
         </Border>

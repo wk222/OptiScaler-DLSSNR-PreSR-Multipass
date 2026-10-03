@@ -28,9 +28,14 @@ on:
         required: false
         default: false
         type: boolean
+      publish_release:
+        description: 'Publish the ZIP as a GitHub pre-release (the Injector GUI downloads from Releases)'
+        required: false
+        default: true
+        type: boolean
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   package:
@@ -104,3 +109,18 @@ jobs:
         name: OptiScaler-Release-Package-${{ inputs.version }}
         path: release/*.zip
         if-no-files-found: error
+
+    - name: Publish GitHub Release
+      if: ${{ inputs.publish_release }}
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PACKAGE_VERSION: ${{ inputs.version }}
+      run: |
+        $zip = Get-ChildItem release -Filter *.zip | Select-Object -First 1
+        $hash = (Get-FileHash $zip.FullName -Algorithm SHA256).Hash
+        [IO.File]::WriteAllText("$PWD/release/SHA256SUMS.txt", "$hash *$($zip.Name)`n")
+        gh release create $env:PACKAGE_VERSION $zip.FullName release/SHA256SUMS.txt `
+          --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --prerelease `
+          --title "$env:PACKAGE_VERSION (cloud build)" `
+          --notes "Cloud build of $env:GITHUB_SHA. Does not include nvngx_dlssnr.dll; use the Injector GUI (Injector\OptiScalerInjector.exe) or see INSTALL-DLSSNR.md."

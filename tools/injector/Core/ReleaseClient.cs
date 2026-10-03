@@ -93,6 +93,32 @@ public static class ReleaseClient
         return all.OrderByDescending(a => a.Published).ThenByDescending(a => a.Name).ToList();
     }
 
+    /// <summary>取指定 tag 下第一个名字满足条件的资源;失败返回 null。</summary>
+    public static async Task<ReleaseAsset?> FindTagAssetAsync(string repo, string tag, Func<string, bool> match, Action<string> log)
+    {
+        try
+        {
+            var token = await Task.Run(GhToken);
+            using var req = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{repo}/releases/tags/{tag}");
+            if (token != "") req.Headers.Authorization = new("Bearer", token);
+            using var resp = await Http.SendAsync(req);
+            resp.EnsureSuccessStatusCode();
+            using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+            foreach (var a in doc.RootElement.GetProperty("assets").EnumerateArray())
+            {
+                var n = a.GetProperty("name").GetString() ?? "";
+                if (!match(n)) continue;
+                return new ReleaseAsset
+                {
+                    Repo = repo, Tag = tag, Name = n, Size = a.GetProperty("size").GetInt64(),
+                    Url = a.GetProperty("browser_download_url").GetString() ?? "",
+                };
+            }
+        }
+        catch (Exception e) { log($"  查询 {repo}@{tag} 失败 ({e.Message}),改用预设下载地址"); }
+        return null;
+    }
+
     static async Task<string> ExpectedHashAsync(ReleaseAsset a)
     {
         if (a.SumsUrl == "") return "";
