@@ -29,6 +29,8 @@ Download the NVIDIA model file, `nvngx_dlssnr.dll`, separately. The file you nee
 4. Run `setup_windows.bat` and choose **NVIDIA** when asked.
 5. Start the game, select DLSS, then press **Insert** to open OptiScaler. Enable Neural Rendering and start with one pass.
 
+Prefer a GUI? `Injector\OptiScalerInjector.exe` (in the release ZIP; source in [tools/injector](tools/injector)) lists your Steam/Epic/GOG games, downloads a release, checks the `nvngx_dlssnr.dll` hash for your GPU, installs with backups, and can uninstall and restore. It needs the .NET 8 Desktop Runtime.
+
 See the [setup guide](INSTALL-DLSSNR.md) for game-specific steps and troubleshooting.
 
 ## Keep in mind

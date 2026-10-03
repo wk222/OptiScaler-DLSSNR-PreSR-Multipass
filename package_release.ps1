@@ -139,6 +139,25 @@ foreach ($d in @("Licenses", "OptiScaler")) {
 
 Copy-Item $forwarder "$stage\nvngx.dll_dlssnr.dll" -Force
 Copy-Item -LiteralPath "$root\docs" -Destination "$stage\docs" -Recurse -Force
+
+# Optional GUI injector (WPF, ~250 KB single exe; needs the .NET 8 Desktop Runtime on the user machine). When it sits inside an
+# extracted package it detects that package by itself; it never ships user state (config.json, cache).
+$injectorSrc = "$root\tools\injector"
+$injectorExe = "$injectorSrc\publish\OptiScalerInjector.exe"
+if ((-not (Test-Path -LiteralPath $injectorExe)) -and (Test-Path -LiteralPath "$injectorSrc\OptiScalerInjector.csproj") -and (Get-Command dotnet -ErrorAction SilentlyContinue)) {
+    Write-Host "injector: publishing GUI..."
+    & dotnet publish "$injectorSrc\OptiScalerInjector.csproj" -c Release -r win-x64 --self-contained false `
+        -p:PublishSingleFile=true `
+        -o "$injectorSrc\publish" -nologo -v q | Out-Null
+}
+if (Test-Path -LiteralPath $injectorExe) {
+    $injectorDst = "$stage\Injector"
+    New-Item -ItemType Directory -Force -Path $injectorDst | Out-Null
+    Copy-Item -LiteralPath $injectorExe -Destination "$injectorDst\OptiScalerInjector.exe" -Force
+    Write-Host "injector: Injector\OptiScalerInjector.exe added"
+} else {
+    Write-Host "injector: skipped (no tools\injector\publish\OptiScalerInjector.exe and dotnet publish unavailable)"
+}
 New-Item -ItemType Directory -Path "$stage\redist\streamline" -Force | Out-Null
 Copy-Item -LiteralPath "$root\redist\streamline\manifest.json" -Destination "$stage\redist\streamline\manifest.json"
 
